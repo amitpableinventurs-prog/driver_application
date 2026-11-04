@@ -1,0 +1,22 @@
+{
+  "name": "driver-go",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Driver IN - hire-a-driver platform: REST API, admin panel, customer panel",
+  "workspaces": [
+    "server",
+    "admin",
+    "customer"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,admin,customer -c cyan,magenta,green \"npm run dev -w server\" \"npm run dev -w admin\" \"npm run dev -w customer\"",
+    "seed": "npm run seed -w server",
+    "test": "npm test -w server",
+    "docs": "npm run docs -w server",
+    "build": "npm run build -w admin && npm run build -w customer",
+    "start": "npm start -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

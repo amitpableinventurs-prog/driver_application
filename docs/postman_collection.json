@@ -1,0 +1,6309 @@
+{
+  "info": {
+    "name": "Driver IN API",
+    "description": "Log in with /auth/otp/verify or /auth/admin/login first: the token variables fill in automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5100/api/v1"
+    },
+    {
+      "key": "customerToken",
+      "value": ""
+    },
+    {
+      "key": "driverToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Send a login OTP to a customer or driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "send"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Creates no account. In development the OTP is echoed back as devOtp; in production it is only sent by SMS.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543210\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Verify the OTP and log in (creates the account on first login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "verify"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Verify the OTP and log in (creates the account on first login)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543210\",\n  \"role\": \"customer\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success) { pm.collectionVariables.set(json.data.user.referralCode !== undefined ? 'customerToken' : 'driverToken', json.data.accessToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin login with email and password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "login"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Admin login with email and password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"<password>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success) { pm.collectionVariables.set('adminToken', json.data.accessToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exchange a refresh token for a new token pair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Refresh tokens rotate: always store the new one. Reusing an old token ends the session.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<refreshToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Revoke a refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Revoke a refresh token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<refreshToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Common (public)",
+      "item": [
+        {
+          "name": "App bootstrap configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "config"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "App bootstrap configuration"
+          }
+        },
+        {
+          "name": "Active service cities with their available booking types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "cities"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Active service cities with their available booking types"
+          }
+        },
+        {
+          "name": "Published rate card for a city",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "plans"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "cityId",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Published rate card for a city"
+          }
+        },
+        {
+          "name": "Active promotional banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "banners"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "audience",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Active promotional banners"
+          }
+        },
+        {
+          "name": "CMS page by slug (terms, privacy, about, faq)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common/pages/:slug",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "pages",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "CMS page by slug (terms, privacy, about, faq)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer: Profile",
+      "item": [
+        {
+          "name": "My profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My profile",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Update profile",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete my account (anonymises personal data)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Delete my account (anonymises personal data)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "My referral code and rewards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/referral",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "referral"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My referral code and rewards",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Upload profile photo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me",
+                "avatar"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Upload profile photo",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register a push notification device token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me/device",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me",
+                "device"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Register a push notification device token",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"<deviceToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove a push token on logout",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/me/device",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "me",
+                "device"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Remove a push token on logout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"<deviceToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer: Cars",
+      "item": [
+        {
+          "name": "My cars",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/cars",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cars"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My cars",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add a car",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/cars",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cars"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Add a car",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<name>\",\n  \"registrationNumber\": \"<registrationNumber>\",\n  \"transmission\": \"manual\",\n  \"category\": \"hatchback\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update a car",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/cars/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cars",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update a car",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove a car",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/cars/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "cars",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Remove a car",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer: Addresses",
+      "item": [
+        {
+          "name": "Saved addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "addresses"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Saved addresses",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save an address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "addresses"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Save an address",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"<label>\",\n  \"address\": \"<address>\",\n  \"lat\": 22.7196,\n  \"lng\": 75.8577\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update an address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/addresses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "addresses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update an address",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete an address",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/addresses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "addresses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Delete an address",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer: Bookings",
+      "item": [
+        {
+          "name": "Fare estimate before booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/estimate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "estimate"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Fare estimate before booking",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"hourly\",\n  \"cityId\": \"<id>\",\n  \"pickup\": {\n    \"address\": \"<address>\",\n    \"lat\": 22.7196,\n    \"lng\": 75.8577\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Coupons available right now",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/coupons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "coupons"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Coupons available right now",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create a booking (instant when scheduledAt is omitted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create a booking (instant when scheduledAt is omitted)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"hourly\",\n  \"cityId\": \"<id>\",\n  \"pickup\": {\n    \"address\": \"<address>\",\n    \"lat\": 22.7196,\n    \"lng\": 75.8577\n  },\n  \"carId\": \"<id>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "My bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "scope",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "My bookings",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Booking detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Booking detail",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel a booking (a fee may apply after a driver is assigned)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Cancel a booking (a fee may apply after a driver is assigned)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"<reason>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Rate the driver after a completed trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id/rate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id",
+                "rate"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Rate the driver after a completed trip",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Invoice for a completed trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id/invoice",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id",
+                "invoice"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Invoice for a completed trip",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer: Payments",
+      "item": [
+        {
+          "name": "Start online payment for a completed trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id",
+                "pay"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Start online payment for a completed trip",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Wallet balance and history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/wallet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "wallet"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Wallet balance and history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Start a wallet top-up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/wallet/topup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "wallet",
+                "topup"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Start a wallet top-up",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Confirm a payment after the gateway checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/payments/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "payments",
+                "verify"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Send the orderId from /wallet/topup or /bookings/:id/pay with the gateway payment id and signature.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"<id>\",\n  \"gatewayPaymentId\": \"<id>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Safety",
+      "item": [
+        {
+          "name": "Raise an SOS alert on an active booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/bookings/:id/sos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "bookings",
+                ":id",
+                "sos"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Raise an SOS alert on an active booking",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Raise an SOS alert on an active booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/sos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "sos"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Raise an SOS alert on an active booking",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List my notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "notifications"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List my notifications",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark notifications read (all when ids is omitted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/notifications/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "notifications",
+                "read"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Mark notifications read (all when ids is omitted)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List my notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "notifications"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List my notifications",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark notifications read (all when ids is omitted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/notifications/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "notifications",
+                "read"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Mark notifications read (all when ids is omitted)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "item": [
+        {
+          "name": "List my support tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "tickets"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List my support tickets",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Open a support ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "tickets"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Open a support ticket",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"<subject>\",\n  \"message\": \"<message>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ticket detail with messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customer/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Ticket detail with messages",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reply on a ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer/tickets/:id/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customer",
+                "tickets",
+                ":id",
+                "messages"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Reply on a ticket",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"<text>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List my support tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "tickets"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List my support tickets",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Open a support ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "tickets"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Open a support ticket",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"<subject>\",\n  \"message\": \"<message>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ticket detail with messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Ticket detail with messages",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reply on a ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/tickets/:id/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "tickets",
+                ":id",
+                "messages"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Reply on a ticket",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"<text>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver: Profile",
+      "item": [
+        {
+          "name": "My profile, KYC and wallet summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My profile, KYC and wallet summary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update profile and driving preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Update profile and driving preferences",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete my account (anonymises personal data)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Delete my account (anonymises personal data)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update payout bank details",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me/bank",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me",
+                "bank"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Update payout bank details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountHolder\": \"<accountHolder>\",\n  \"accountNumber\": \"<accountNumber>\",\n  \"ifsc\": \"<ifsc>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver",
+      "item": [
+        {
+          "name": "Upload profile photo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me",
+                "avatar"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Upload profile photo",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register a push notification device token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me/device",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me",
+                "device"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Register a push notification device token",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"<deviceToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove a push token on logout",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/me/device",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "me",
+                "device"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Remove a push token on logout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"<deviceToken>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver: KYC",
+      "item": [
+        {
+          "name": "My KYC documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "documents"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My KYC documents",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload or replace a KYC document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "documents"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Upload or replace a KYC document",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type",
+                  "value": "driving_license",
+                  "type": "text"
+                },
+                {
+                  "key": "number",
+                  "value": "<number>",
+                  "type": "text"
+                },
+                {
+                  "key": "expiryDate",
+                  "value": "<expiryDate>",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit KYC for review",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/kyc/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "kyc",
+                "submit"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Submit KYC for review",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver: Availability",
+      "item": [
+        {
+          "name": "Go online or offline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "status"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Go online or offline",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"online\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update live location (REST fallback for the socket event)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "location"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Update live location (REST fallback for the socket event)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 22.7196,\n  \"lng\": 75.8577\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver: Bookings",
+      "item": [
+        {
+          "name": "Open bookings near me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/available",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                "available"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Open bookings near me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "My current and upcoming bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                "active"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "My current and upcoming bookings",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "My booking history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "My booking history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Booking detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Booking detail",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept an offer (first driver wins)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "accept"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Accept an offer (first driver wins)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pass on an offer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Pass on an offer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark arrived at pickup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/arrived",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "arrived"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Mark arrived at pickup",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Start the trip with the customer OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "start"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Start the trip with the customer OTP",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "End the trip; returns the final fare and amount to collect",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/end",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "end"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "End the trip; returns the final fare and amount to collect",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Record cash taken for an unpaid online trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/collect-cash",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "collect-cash"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Record cash taken for an unpaid online trip",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Back out of an accepted booking (it returns to search)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Back out of an accepted booking (it returns to search)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"<reason>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Rate the customer after a completed trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/bookings/:id/rate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "bookings",
+                ":id",
+                "rate"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Rate the customer after a completed trip",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver: Earnings",
+      "item": [
+        {
+          "name": "Earnings summary and day-wise breakdown",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/earnings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "earnings"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Earnings summary and day-wise breakdown",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Wallet balance and history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/wallet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "wallet"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Wallet balance and history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pay platform dues online",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/wallet/pay-dues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "wallet",
+                "pay-dues"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Pay platform dues online",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Confirm a dues payment after gateway checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/payments/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "payments",
+                "verify"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Confirm a dues payment after gateway checkout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"<id>\",\n  \"gatewayPaymentId\": \"<id>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "My payout requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/driver/payouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "payouts"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "My payout requests",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Request a payout; the amount is held from the wallet immediately",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/driver/payouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "driver",
+                "payouts"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Request a payout; the amount is held from the wallet immediately",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driverToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Account",
+      "item": [
+        {
+          "name": "Logged-in admin with permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "me"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Logged-in admin with permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Change my password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "me",
+                "password"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Change my password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"<currentPassword>\",\n  \"newPassword\": \"<newPassword>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Dashboard",
+      "item": [
+        {
+          "name": "Live KPIs, 14 day trend and status mix",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Live KPIs, 14 day trend and status mix",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Day-wise revenue report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports/revenue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "revenue"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Day-wise revenue report",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Settings",
+      "item": [
+        {
+          "name": "Platform settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Platform settings",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update platform settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Update platform settings",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Team",
+      "item": [
+        {
+          "name": "Roles and their permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "roles"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Roles and their permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List admin users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/admins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "admins"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List admin users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create an admin user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/admins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "admins"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create an admin user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<name>\",\n  \"email\": \"user@example.com\",\n  \"password\": \"<password>\",\n  \"role\": \"super_admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update an admin role, status or password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/admins/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "admins",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update an admin role, status or password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Admin activity log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "audit-logs"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entity",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "action",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Admin activity log",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Customers",
+      "item": [
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "customers"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List customers",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Customer detail with cars and recent bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/customers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "customers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Customer detail with cars and recent bookings",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Block or unblock a customer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/customers/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "customers",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Block or unblock a customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Credit or debit a customer wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/customers/:id/wallet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "customers",
+                ":id",
+                "wallet"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Credit or debit a customer wallet",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"credit\",\n  \"amount\": 1,\n  \"note\": \"<note>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Drivers",
+      "item": [
+        {
+          "name": "Online drivers with location for the live map",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                "live"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Online drivers with location for the live map",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "kycStatus",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "online",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List drivers",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Driver detail with documents and recent trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Driver detail with documents and recent trips",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend or reactivate a driver",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Suspend or reactivate a driver",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Download a KYC document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id/documents/:documentId/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id",
+                "documents",
+                ":documentId",
+                "file"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                },
+                {
+                  "key": "documentId",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Download a KYC document",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve or reject one KYC document",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id/documents/:documentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id",
+                "documents",
+                ":documentId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                },
+                {
+                  "key": "documentId",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Approve or reject one KYC document",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Final KYC decision",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id/kyc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id",
+                "kyc"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Final KYC decision",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Credit or debit a driver wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers/:id/wallet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drivers",
+                ":id",
+                "wallet"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Credit or debit a driver wallet",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"credit\",\n  \"amount\": 1,\n  \"note\": \"<note>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Bookings",
+      "item": [
+        {
+          "name": "List bookings with filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List bookings with filters",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export bookings as CSV (up to 10,000 rows)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                "export"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Export bookings as CSV (up to 10,000 rows)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Booking detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Booking detail",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Nearest eligible drivers for manual assignment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id/candidates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id",
+                "candidates"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Nearest eligible drivers for manual assignment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Manually assign a driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id",
+                "assign"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Manually assign a driver",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driverId\": \"<id>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel a booking without a fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Cancel a booking without a fee",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"<reason>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Refund a paid booking to the customer wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id/refund",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id",
+                "refund"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Refund a paid booking to the customer wallet",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"<note>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List ratings and reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reviews"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "maxRating",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List ratings and reviews",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hide or restore a review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reviews/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reviews",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Hide or restore a review",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hidden\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Support",
+      "item": [
+        {
+          "name": "SOS alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sos"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "SOS alerts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resolve an SOS alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sos/:id/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sos",
+                ":id",
+                "resolve"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Resolve an SOS alert",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolutionNote\": \"<resolutionNote>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Support tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tickets"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Support tickets",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ticket with conversation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Ticket with conversation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Change ticket status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Change ticket status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"open\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reply to a ticket and optionally change its status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets/:id/reply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tickets",
+                ":id",
+                "reply"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Reply to a ticket and optionally change its status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"<text>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Finance",
+      "item": [
+        {
+          "name": "All wallet transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "transactions"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "ownerRole",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "All wallet transactions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Driver payout requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "payouts"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Driver payout requests",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark a payout paid after the bank transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payouts/:id/mark-paid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "payouts",
+                ":id",
+                "mark-paid"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Mark a payout paid after the bank transfer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"<reference>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reject a payout and return the amount to the wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payouts/:id/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "payouts",
+                ":id",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Reject a payout and return the amount to the wallet",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"<note>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Catalog",
+      "item": [
+        {
+          "name": "List cities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List cities",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create city",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create city",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<name>\",\n  \"state\": \"<state>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update city",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update city",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<name>\",\n  \"state\": \"<state>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List pricing plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pricing"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List pricing plans",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create pricing plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pricing"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create pricing plan",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"<city>\",\n  \"bookingType\": \"hourly\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update pricing plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pricing/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pricing",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update pricing plan",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete pricing plan",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pricing/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pricing",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Delete pricing plan",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List coupons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/coupons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "coupons"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List coupons",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/coupons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "coupons"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create coupon",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"<code>\",\n  \"discountType\": \"flat\",\n  \"value\": 1,\n  \"validFrom\": \"<validFrom>\",\n  \"validTo\": \"<validTo>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update coupon",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/coupons/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "coupons",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update coupon",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/coupons/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "coupons",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Delete coupon",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Content",
+      "item": [
+        {
+          "name": "List banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List banners",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create banner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create banner",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"<title>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update banner",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update banner",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete banner",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Delete banner",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload an image and get its public URL",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/uploads/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "uploads",
+                "image"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Upload an image and get its public URL",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List pages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pages"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List pages",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pages"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Create page",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"<slug>\",\n  \"title\": \"<title>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update page",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pages/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pages",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Update page",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete page",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pages/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pages",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ],
+              "query": []
+            },
+            "description": "Delete page",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sent broadcasts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/broadcasts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "broadcasts"
+              ],
+              "variable": [],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Sent broadcasts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send a notification to all customers, drivers or everyone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/broadcasts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "broadcasts"
+              ],
+              "variable": [],
+              "query": []
+            },
+            "description": "Send a notification to all customers, drivers or everyone",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audience\": \"customers\",\n  \"title\": \"<title>\",\n  \"body\": \"<body>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
