@@ -44,6 +44,8 @@ Customer and driver logins use a phone OTP. In development the OTP comes back in
 | `npm run docs` | Regenerates `docs/` from the route code |
 | `npm run build` | Production builds of both panels |
 | `npm run seed` | Safe to re-run: it only adds what is missing |
+| `npm run seed:demo` | Fills an empty database with demo customers, drivers, 45 days of bookings and live trips. Development only |
+| `npm run seed:demo -- --online` | Puts the demo drivers back online (idle drivers leave the live map after 15 minutes) |
 
 ## How the money works
 

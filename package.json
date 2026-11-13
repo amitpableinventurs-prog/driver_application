@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "concurrently -k -n api,admin,customer -c cyan,magenta,green \"npm run dev -w server\" \"npm run dev -w admin\" \"npm run dev -w customer\"",
     "seed": "npm run seed -w server",
+    "seed:demo": "npm run seed:demo -w server --",
     "test": "npm test -w server",
     "docs": "npm run docs -w server",
     "build": "npm run build -w admin && npm run build -w customer",
